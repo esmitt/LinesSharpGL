@@ -121,6 +121,7 @@ namespace Lines
             Control control = (Control)sender;
 
             SetBounds(control.Size.Width, control.Size.Height);
+            scene.Reshape(openGLControl.OpenGL, control.Size.Width, control.Size.Height);
         }
 
         /// <summary>
@@ -145,6 +146,7 @@ namespace Lines
         float angle, length, radiusRadius;
         Double[] currentTransform = new Double[16], lastTransform = new Double[16] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
         vec3 startPosition, endPosition, normalVector;
+        Point translate = new Point(0);
 
         private int width;
         private int height;
@@ -183,10 +185,12 @@ namespace Lines
         {
             pInitial.X = e.X;
             pInitial.Y = e.Y;
-            //lastPoint = scene.trackBallMapping(pInitial);
-            //scene.
-            setClick(e.X, e.Y);
             bIsDragging = true;
+            if (e.Button == MouseButtons.Left) 
+            {
+                setClick(e.X, e.Y);
+                
+            }
         }
         
         float getScalarProduct(vec3 a, vec3 b) 
@@ -196,7 +200,7 @@ namespace Lines
 
         private void openGLControl_MouseMove(object sender, MouseEventArgs e)
         {
-            if (bIsDragging) 
+            if (bIsDragging && e.Button == MouseButtons.Left) 
             {
                 Point pNew = new Point(e.X, e.Y);
                 vec3 curPoint = scene.trackBallMapping(pNew);
@@ -234,16 +238,37 @@ namespace Lines
                 float newV = getLength(startPosition) * getLength(endPosition);
                 angle = 10 * (float)(Math.Acos(newV)) / (float)(Math.PI * 180.0);
                 //normalVector = startPosition.VectorProduct(endPosition);
-                normalVector = crossProduct(startPosition, endPosition);
+                //normalVector = crossProduct(startPosition, endPosition);
+                normalVector = crossProduct(endPosition, startPosition);
                 startPosition = endPosition;
                 mTransformation = glm.rotate(2*angle, normalVector);
                 scene.SetModelMatrix(mTransformation);
             }
+            else if (bIsDragging && e.Button == MouseButtons.Right)
+            {
+                vec3 t = new vec3(0);
+                t.x = 0.01f*(pInitial.X - e.X);
+                t.y = 0.01f*(pInitial.Y - e.Y);
+                mTransformation = glm.translate(new mat4(1), t);
+                scene.SetModelMatrix(mTransformation);
+                pInitial.X = e.X;
+                pInitial.Y = e.Y;
+            }
+        }
+        
+        private void openGLControl_MouseWheel(object sender, MouseEventArgs e) 
+        {
+        
         }
 
         private void openGLControl_MouseUp(object sender, MouseEventArgs e)
         {
             bIsDragging = false;
+        }
+
+        private void openGLControl_MouseHover(object sender, EventArgs e)
+        {
+            openGLControl.Focus();
         }
     }
 }

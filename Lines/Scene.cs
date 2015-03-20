@@ -15,13 +15,14 @@ namespace Lines
         public const String DLL_PATH = "DLLNative.dll";
 
         [DllImport(DLL_PATH, EntryPoint = "getLineData", ExactSpelling = false, CallingConvention = CallingConvention.Cdecl)]
-        unsafe static extern void getLineData(float[] pColor, float[] pLine, ref int nLines);
-        [DllImport(DLL_PATH)]
-        static extern int getData();
+        unsafe static extern void getLineData(float[] pColor, float[] pLine, ref int nLines, float[] fCenter, ref float fScale);
+        
         //  The projection, view and model matrices.
         mat4 projectionMatrix;
         mat4 viewMatrix;
         mat4 modelMatrix;
+        float fScale;
+        vec3 center;
         int iWidth = 0;
         int iHeight = 0;
         int nLines = 0;
@@ -34,9 +35,7 @@ namespace Lines
         VertexBufferArray vertexBufferArray;
 
         //  The shader program for our vertex and fragment shader.
-        private ShaderProgram shaderProgram;
-
-        
+        private ShaderProgram shaderProgram;        
 
         
         /// <summary>
@@ -65,14 +64,18 @@ namespace Lines
             const float rads = (60.0f / 360.0f) * (float)Math.PI * 2.0f;
             projectionMatrix = glm.perspective(rads, width / height, 0.1f, 100.0f);
 
-            //  Create a view matrix to move us back a bit.
-            viewMatrix = glm.translate(new mat4(1.0f), new vec3(0.0f, 0.0f, -5.0f));
-
-            //  Create a model matrix to make the model a little bigger.
-            modelMatrix = glm.scale(new mat4(1.0f), new vec3(2.5f));
-
             //  Now create the geometry for the square.
             CreateVerticesForSquare(gl);
+
+            //  Create a view matrix to move us back a bit.
+            viewMatrix = glm.translate(new mat4(1.0f), new vec3(0.0f, 0.0f, -2.0f));
+
+            //  Create a model matrix to make the model a little bigger.
+            center.x = -center.x;
+            center.y = -center.y;
+            center.z = -center.z;
+            modelMatrix = glm.translate(new mat4(1.0f), center);
+            modelMatrix = glm.scale(new mat4(1.0f), new vec3(fScale, fScale, fScale)) * modelMatrix;
 
             //SetBounds((int)width, (int)height);
         }
@@ -108,11 +111,17 @@ namespace Lines
             return v;
         }
 
-        public void Reshape(int iWidth, int iHeight) 
+        public void Reshape(OpenGL gl, int iWidth, int iHeight) 
         {
             this.iWidth = iWidth;
             this.iHeight = iHeight;
-            //GlmNet.glm.perspective();
+            if(iHeight == 0) iHeight = 1;
+	        float ratio = iWidth / (float)iHeight;
+            gl.Viewport(0, 0, iWidth, iHeight);
+            float angle = 45.0f;
+            float NCP = 0.01f;
+	        float FCP = 500.0f;
+            projectionMatrix = GlmNet.glm.perspective(angle, ratio, NCP, FCP);
         }
 
         public void SetModelMatrix(mat4 mMatrix) 
@@ -155,14 +164,19 @@ namespace Lines
         {    
             float[] pLines = null;
             float[] pColor = null;
+            float[] theCenter = new float[3];
+            float some = 0;
             unsafe 
             {
-                getLineData(null, null, ref nLines);
+                getLineData(null, null, ref nLines, theCenter, ref some);
                 pLines = new float[nLines*3*2];
                 pColor = new float[nLines*4*2];
-                getLineData(pColor, pLines, ref nLines);
+                getLineData(pColor, pLines, ref nLines, theCenter, ref fScale);
             }
-
+            //copy the center
+            center.x = theCenter[0];
+            center.y = theCenter[1];
+            center.z = theCenter[2];
             //  Create the vertex array object.
             vertexBufferArray = new VertexBufferArray();
             vertexBufferArray.Create(gl);
