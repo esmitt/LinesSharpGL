@@ -2,27 +2,20 @@
 #include <limits>
 #include <vector>
 
-typedef struct vec3
+typedef struct 
 {
 	float x, y, z;
-	//vec3(){ x = y = z = 0; }
-	//vec3(float x, float y, float z){ this->x = x; this->y = y; this->z = z; }
-	//vec3(const vec3 &v){ x = v.x; y = v.y; z = v.z; }
-	//vec3 operator = (const vec3 & v){ this->x = v.x; this->y = v.y; this->z = v.z; return *this; }
-};
+}vec3;
 
-typedef struct line
+typedef struct 
 {
 	vec3 p1, p2;
-	//line(){  }
-	//line(const line& l){ this->p1 = l.p1; this->p2 = l.p2; }
-};
+}line;
 
 typedef struct{
 	float r, g, b, a;
 }color4;
 
-//extern "C" __declspec(dllexport)void getLineData(color4* pColor, line* pLines, int & nLines);
 extern "C" __declspec(dllexport)void getLineData(float* pColor, float* pLines, int & nLines, float* fCenter, float & fScale);
 
 void getLineData(float* pColor, float* pLines, int & nLines, float* fCenter, float & fScale)

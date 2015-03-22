@@ -16,16 +16,23 @@ namespace Lines
 
         [DllImport(DLL_PATH, EntryPoint = "getLineData", ExactSpelling = false, CallingConvention = CallingConvention.Cdecl)]
         unsafe static extern void getLineData(float[] pColor, float[] pLine, ref int nLines, float[] fCenter, ref float fScale);
-        
+        #region parameters
+        //fixed parameters
+        const float angle = 45.0f;
+        const float NCP = 0.01f;
+        const float FCP = 500.0f;
+        //window parameters
+        int iWidth = 0;
+        int iHeight = 0;
         //  The projection, view and model matrices.
         mat4 projectionMatrix;
         mat4 viewMatrix;
         mat4 modelMatrix;
+        //object info
         float fScale;
         vec3 center;
-        int iWidth = 0;
-        int iHeight = 0;
-        int nLines = 0;
+        int nLines = 0; //number of lines read
+       
 
         //  Constants that specify the attribute indexes.
         const uint attributeIndexPosition = 0;
@@ -35,9 +42,9 @@ namespace Lines
         VertexBufferArray vertexBufferArray;
 
         //  The shader program for our vertex and fragment shader.
-        private ShaderProgram shaderProgram;        
+        private ShaderProgram shaderProgram;
+        #endregion parameters
 
-        
         /// <summary>
         /// Initialises the scene.
         /// </summary>
@@ -61,11 +68,10 @@ namespace Lines
             iWidth = Convert.ToInt32(width);
             iHeight = Convert.ToInt32(height);
             //  Create a perspective projection matrix.
-            const float rads = (60.0f / 360.0f) * (float)Math.PI * 2.0f;
-            projectionMatrix = glm.perspective(rads, width / height, 0.1f, 100.0f);
+            projectionMatrix = new mat4(1.0f); //it will be change after in resize
 
-            //  Now create the geometry for the square.
-            CreateVerticesForSquare(gl);
+            //  Now create the geometry for the set of lines.
+            CreateVerticesForLines(gl);
 
             //  Create a view matrix to move us back a bit.
             viewMatrix = glm.translate(new mat4(1.0f), new vec3(0.0f, 0.0f, -0.5f));
@@ -76,41 +82,14 @@ namespace Lines
             center.z = -center.z;
             modelMatrix = glm.translate(new mat4(1.0f), center);
             modelMatrix = glm.scale(new mat4(1.0f), new vec3(fScale, fScale, fScale)) * modelMatrix;
-
-            //SetBounds((int)width, (int)height);
         }
 
-        public float getLength(vec3 v) 
-        {
-            return (float)Math.Sqrt((v.x * v.x) + (v.y * v.y) + (v.y * v.y));
-        }
-        
-        vec3 Normalize(vec3 v)
-        {
-            float l = getLength(v);
-            if (l == 0.0f)
-                l = 1.0f;
-            vec3 result;
-            result.x = v.x / l;
-            result.y = v.y / l;
-            result.z = v.z / l;
-            return result;
-        }
-
-        public vec3 trackBallMapping(Point point)
-        {
-            vec3 v;
-            float d;
-            v.x = (2.0f * point.X - iWidth) / iWidth;
-            v.y = (iHeight - 2.0f * point.Y) / iHeight;
-            v.z = 0.0f;
-            d = getLength(v);
-            d = (d<1.0f) ? d : 1.0f;
-            v.z = (float)Math.Sqrt(1.001f - d * d);
-            v = Normalize(v); // Still need to normalize, since we only capped d, not v.
-            return v;
-        }
-
+        /// <summary>
+        /// Is invoked when the window change of size.
+        /// </summary>
+        /// <param name="gl">The OpenGL instance.</param>
+        /// <param name="width">The width of the screen.</param>
+        /// <param name="height">The height of the screen.</param>
         public void Reshape(OpenGL gl, int iWidth, int iHeight) 
         {
             this.iWidth = iWidth;
@@ -118,40 +97,17 @@ namespace Lines
             if(iHeight == 0) iHeight = 1;
 	        float ratio = iWidth / (float)iHeight;
             gl.Viewport(0, 0, iWidth, iHeight);
-            float angle = 45.0f;
-            float NCP = 0.01f;
-	        float FCP = 500.0f;
             projectionMatrix = GlmNet.glm.perspective(angle, ratio, NCP, FCP);
         }
 
-        public void SetModelMatrix(mat4 mMatrix) 
-        {
-            modelMatrix = mMatrix * modelMatrix;
-        }
-
+        /// <summary>
+        /// Updates the view matrix in the pipeline
+        /// </summary>
+        /// <param name="mMatrix">The new view matrix as a float array.</param>
         public void SetViewMatrix(float[] mMatrix)
         {
             
             vec4 c1, c2, c3, c4;
-            //c1.x = mMatrix[0];
-            //c1.y = mMatrix[1];
-            //c1.z = mMatrix[2];
-            //c1.w = mMatrix[3];
-
-            //c2.x = mMatrix[4];
-            //c2.y = mMatrix[5];
-            //c2.z = mMatrix[6];
-            //c2.w = mMatrix[7];
-
-            //c3.x = mMatrix[8];
-            //c3.y = mMatrix[9];
-            //c3.z = mMatrix[10];
-            //c3.w = mMatrix[11];
-
-            //c4.x = mMatrix[12];
-            //c4.y = mMatrix[13];
-            //c4.z = mMatrix[14];
-            //c4.w = mMatrix[15];
             c1.x = mMatrix[0];
             c2.x = mMatrix[1];
             c3.x = mMatrix[2];
@@ -193,8 +149,7 @@ namespace Lines
             //  Bind the out vertex array.
             vertexBufferArray.Bind(gl);
 
-            //  Draw the square.
-            //gl.DrawArrays(OpenGL.GL_TRIANGLES, 0, 6);
+            //  Draw the lines.
             gl.DrawArrays(OpenGL.GL_LINES, 0, nLines*2);
 
             //  Unbind our vertex array and shader.
@@ -203,10 +158,10 @@ namespace Lines
         }
 
         /// <summary>
-        /// Creates the geometry for the square, also creating the vertex buffer array.
+        /// Creates the geometry for lines, also creating the vertex buffer array.
         /// </summary>
         /// <param name="gl">The OpenGL instance.</param>
-        private void CreateVerticesForSquare(OpenGL gl)
+        private void CreateVerticesForLines(OpenGL gl)
         {    
             float[] pLines = null;
             float[] pColor = null;
@@ -239,7 +194,6 @@ namespace Lines
             var colourDataBuffer = new VertexBuffer();
             colourDataBuffer.Create(gl);
             colourDataBuffer.Bind(gl);
-            //colourDataBuffer.SetData(gl, 1, colors, false, 3);
             colourDataBuffer.SetData(gl, 1, pColor, false, 4);
 
             //  Unbind the vertex array, we've finished specifying data for it.

@@ -4,8 +4,7 @@ using System.Drawing;
 namespace Lines
 {
     /*
-    * This code is a part of NeHe tutorials and was converted from C++ into C#. 
-    * Matrix/Vector manipulations have been updated.
+    * This code is a little bit "ugly" but works perfectly to make the arcball rotation!
     */
     public class arcball
     {
