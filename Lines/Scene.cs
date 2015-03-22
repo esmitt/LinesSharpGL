@@ -68,7 +68,7 @@ namespace Lines
             CreateVerticesForSquare(gl);
 
             //  Create a view matrix to move us back a bit.
-            viewMatrix = glm.translate(new mat4(1.0f), new vec3(0.0f, 0.0f, -2.0f));
+            viewMatrix = glm.translate(new mat4(1.0f), new vec3(0.0f, 0.0f, -0.5f));
 
             //  Create a model matrix to make the model a little bigger.
             center.x = -center.x;
@@ -127,6 +127,52 @@ namespace Lines
         public void SetModelMatrix(mat4 mMatrix) 
         {
             modelMatrix = mMatrix * modelMatrix;
+        }
+
+        public void SetViewMatrix(float[] mMatrix)
+        {
+            
+            vec4 c1, c2, c3, c4;
+            //c1.x = mMatrix[0];
+            //c1.y = mMatrix[1];
+            //c1.z = mMatrix[2];
+            //c1.w = mMatrix[3];
+
+            //c2.x = mMatrix[4];
+            //c2.y = mMatrix[5];
+            //c2.z = mMatrix[6];
+            //c2.w = mMatrix[7];
+
+            //c3.x = mMatrix[8];
+            //c3.y = mMatrix[9];
+            //c3.z = mMatrix[10];
+            //c3.w = mMatrix[11];
+
+            //c4.x = mMatrix[12];
+            //c4.y = mMatrix[13];
+            //c4.z = mMatrix[14];
+            //c4.w = mMatrix[15];
+            c1.x = mMatrix[0];
+            c2.x = mMatrix[1];
+            c3.x = mMatrix[2];
+            c4.x = mMatrix[3];
+
+            c1.y = mMatrix[4];
+            c2.y = mMatrix[5];
+            c3.y = mMatrix[6];
+            c4.y = mMatrix[7];
+
+            c1.z = mMatrix[8];
+            c2.z = mMatrix[9];
+            c3.z = mMatrix[10];
+            c4.z = mMatrix[11];
+
+            c1.w = mMatrix[12];
+            c2.w = mMatrix[13];
+            c3.w = mMatrix[14];
+            c4.w = mMatrix[15];
+            mat4 ma = new mat4(c1, c2, c3, c4);
+            modelMatrix = ma * viewMatrix;
         }
 
         /// <summary>

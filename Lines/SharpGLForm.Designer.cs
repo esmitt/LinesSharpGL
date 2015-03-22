@@ -63,6 +63,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl)).EndInit();
             this.ResumeLayout(false);
 
+            LastTransformation.SetIdentity(); // Reset Rotation
+            ThisTransformation.SetIdentity(); // Reset Rotation
+            ThisTransformation.get_Renamed(matrix);
+
         }
 
         #endregion
