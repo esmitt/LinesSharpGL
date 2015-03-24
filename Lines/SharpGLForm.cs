@@ -136,6 +136,21 @@ namespace Lines
         }
 
         #region mouse control
+        private void openGLControl_MouseHover(object sender, System.EventArgs e)
+        {
+            this.Focus();
+        }
+
+        private void openGLControl_MouseWheel(object sender, MouseEventArgs e)
+        {
+            int iValue = e.Delta * SystemInformation.MouseWheelScrollLines / 60;
+            mouseStartDrag = new Point(e.X, e.Y);
+            this.startDrag(mouseStartDrag);
+            Point tempAux = new Point(e.X, e.Y + iValue);
+            isMiddleDrag = true;
+            this.drag(tempAux);
+            isMiddleDrag = false;
+        }
 
         private void openGLControl_MouseDown(object sender, MouseEventArgs e)
         {
