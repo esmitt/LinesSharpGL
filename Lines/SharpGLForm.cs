@@ -81,7 +81,7 @@ namespace Lines
                 else if (isRightDrag) //pan
                 {
                     float x = (float)(MousePt.X - mouseStartDrag.X) / (float)this.openGLControl.Width;
-                    float y = (float)(MousePt.Y - mouseStartDrag.Y) / (float)this.openGLControl.Height;
+                    float y = (float)(mouseStartDrag.Y - MousePt.Y) / (float)this.openGLControl.Height;
                     float z = 0.0f;
                     
                     ThisTransformation.Pan = new Vector3f(x, y, z);
